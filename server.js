@@ -61,7 +61,7 @@ io.on("connection", (socket) => {
 
           setTimeout(startGame, 3000);
         }
-      }, 500);
+      }, 100);
     }, 2000);
   }
 
