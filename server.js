@@ -60,9 +60,9 @@ io.on("connection", (socket) => {
 
           console.log("💥 CRASHED AT:", crashPoint);
 
-          socket.emit("crash-update", {
-            crashpoint: crashPoint,
-          });
+         socket.emit("crash-update", {
+  crashpoint: parseFloat(crashPoint),
+});
 
           socket.emit("reset");
 
