@@ -48,8 +48,8 @@ io.on("connection", (socket) => {
 
         // 🔥 LIVE MULTIPLIER UPDATE
         socket.emit("crash-update", {
-          crashpoint: multiplier.toFixed(2),
-        });
+  crashpoint: parseFloat(multiplier.toFixed(2)),
+});
 
         // 🔥 STATUS (VERY IMPORTANT)
         socket.emit("working");
