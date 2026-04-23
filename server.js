@@ -1,3 +1,5 @@
+// server.js
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -6,6 +8,14 @@ const axios = require("axios");
 const app = express();
 const server = http.createServer(app);
 
+// 🔥 Railway PORT fix
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("Socket running ✅");
+});
+
+// 🔥 Socket setup
 const io = new Server(server, {
   cors: { origin: "*" },
   path: "/socket.io",
@@ -14,7 +24,7 @@ const io = new Server(server, {
 
 let round = 1;
 
-// 🔥 GAME LOOP (GLOBAL)
+// 🔥 GLOBAL GAME LOOP (sirf 1 baar chalega)
 function startGame() {
   const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
   let multiplier = 1.0;
@@ -50,13 +60,18 @@ function startGame() {
 
 // 🔥 SOCKET EVENTS
 io.on("connection", (socket) => {
-  console.log("USER CONNECTED:", socket.id);
+  console.log("✅ USER CONNECTED:", socket.id);
 
+  socket.onAny((event, data) => {
+    console.log("📡 EVENT:", event, data);
+  });
+
+  // 👉 BET EVENT (IMPORTANT)
   socket.on("newBet", async (username, amount) => {
-    console.log("BET:", username, amount);
+    console.log("💰 BET:", username, amount);
 
     try {
-      await axios.post(
+      const res = await axios.post(
         "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
         new URLSearchParams({
           username: username,
@@ -65,19 +80,36 @@ io.on("connection", (socket) => {
           amount: amount
         })
       );
+
+      console.log("✅ SAVED TO PHP:", res.data);
+
     } catch (err) {
-      console.log("ERROR:", err.message);
+      console.log("❌ API ERROR:", err.message);
     }
   });
 
   socket.on("cashout", (data) => {
-    console.log("CASHOUT:", data);
+    console.log("💸 CASHOUT:", data);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ DISCONNECTED:", socket.id);
   });
 });
 
-// 👉 start only once
+// 🔥 Error protection (important for Railway)
+process.on("uncaughtException", (err) => {
+  console.log("❌ UNCAUGHT:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.log("❌ PROMISE ERROR:", err);
+});
+
+// 👉 Start game once
 startGame();
 
-server.listen(3000, () => {
-  console.log("SERVER RUNNING");
+// 👉 Start server
+server.listen(PORT, () => {
+  console.log("🔥 SERVER RUNNING ON PORT:", PORT);
 });
