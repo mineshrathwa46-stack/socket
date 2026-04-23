@@ -76,25 +76,6 @@ socket.on("addWin", async (username, multiplier, extra) => {
 
   console.log("💸 CASHOUT:", username, multiplier, extra);
 
-  // 🧠 example calculation
-  const betAmount = 10; // abhi hardcoded (baad me bets array se lena)
-  const winAmount = betAmount * multiplier;
-
-  try {
-    const res = await axios.post(
-      "https://jalwagame5.shop/jet/trova/src/api/win.php",
-      new URLSearchParams({
-        username: username,
-        amount: winAmount
-      })
-    );
-
-    console.log("✅ WIN SAVED:", res.data);
-
-  } catch (err) {
-    console.log("❌ ERROR:", err.message);
-  }
-
 });
   // 👉 BET EVENT (IMPORTANT)
   socket.on("newBet", async (username, amount) => {
