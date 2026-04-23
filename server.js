@@ -14,7 +14,13 @@ const PORT = process.env.PORT || 3000;
 app.get("/", (req, res) => {
   res.send("Socket running ✅");
 });
+let period = 100000000000000;
+let currentPeriod;
 
+function getNextPeriod() {
+  period++;
+  return period;
+}
 // 🔥 Socket setup
 const io = new Server(server, {
   cors: { origin: "*" },
@@ -26,10 +32,11 @@ let round = 1;
 
 // 🔥 GLOBAL GAME LOOP (sirf 1 baar chalega)
 function startGame() {
+  const currentPeriod = getNextPeriod();
   const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
   let multiplier = 1.0;
 
-  console.log("🚀 ROUND:", round, "CRASH:", crashPoint);
+  console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
   io.emit("prepareplane");
 
@@ -75,7 +82,7 @@ io.on("connection", (socket) => {
         "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
         new URLSearchParams({
           username: username,
-          period: Date.now(),
+          period: currentPeriod,
           ans: "manual",
           amount: amount
         })
