@@ -98,11 +98,6 @@ socket.on("addWin", async (username, multiplier, extra) => {
       console.log("❌ API ERROR:", err.message);
     }
   });
-
-  socket.on("cashout", (data) => {
-    console.log("💸 CASHOUT:", data);
-  });
-
   socket.on("disconnect", () => {
     console.log("❌ DISCONNECTED:", socket.id);
   });
