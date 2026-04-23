@@ -44,7 +44,6 @@ function startGame() {
       io.emit("crash-update", {
         crashpoint: parseFloat(multiplier.toFixed(2)),
       });
-console.log("📈 UPDATE:", parseFloat(multiplier.toFixed(2)));
       if (multiplier >= crashPoint) {
         clearInterval(interval);
 
