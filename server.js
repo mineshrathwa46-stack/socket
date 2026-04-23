@@ -74,7 +74,15 @@ io.on("connection", (socket) => {
   });
 socket.on("addWin", async (username, amount, multiplier) => {
 
-  console.log("💸 CASHOUT:", username, amount, multiplier);
+  // ✅ force number
+  amount = parseFloat(amount);
+  multiplier = parseFloat(multiplier);
+
+  // ✅ 2 decimal fix
+  const fixedMultiplier = parseFloat(multiplier.toFixed(2));
+  const fixedAmount = parseFloat(amount.toFixed(2));
+
+  console.log("💸 CASHOUT:", username, fixedAmount, fixedMultiplier);
 
   try {
 
@@ -82,8 +90,8 @@ socket.on("addWin", async (username, amount, multiplier) => {
       "https://jalwagame5.shop/jet/trova/src/api/bet",
       {
         username: username,
-        amount: amount,
-        multiplier: multiplier
+        amount: fixedAmount,
+        multiplier: fixedMultiplier
       },
       {
         params: {
