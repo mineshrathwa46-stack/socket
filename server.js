@@ -1,5 +1,3 @@
-// server.js
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -8,12 +6,15 @@ const axios = require("axios");
 const app = express();
 const server = http.createServer(app);
 
-// 🔥 Railway PORT fix
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.send("Socket running ✅");
+const io = new Server(server, {
+  cors: { origin: "*" },
+  path: "/socket.io",
+  transports: ["polling"]
 });
+
+// 🔢 PERIOD SYSTEM
 let period = 100000000000000;
 let currentPeriod;
 
@@ -21,133 +22,142 @@ function getNextPeriod() {
   period++;
   return period;
 }
-// 🔥 Socket setup
-const io = new Server(server, {
-  cors: { origin: "*" },
-  path: "/socket.io",
-  transports: ["polling"],
-});
 
-let round = 1;
-
-// 🔥 GLOBAL GAME LOOP (sirf 1 baar chalega)
+// 🎮 GAME LOOP
 function startGame() {
+
   currentPeriod = getNextPeriod();
-  const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
   let multiplier = 1.0;
+  const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
-  io.emit("prepareplane", {
-  period: currentPeriod
-});
+  // 🟡 PREPARE
+  io.emit("prepareplane");
+
   setTimeout(() => {
+
+    // ✈️ START
     io.emit("flyplane");
 
     const interval = setInterval(() => {
+
       multiplier += 0.01;
 
       io.emit("crash-update", {
-        crashpoint: parseFloat(multiplier.toFixed(2)),
+        crashpoint: parseFloat(multiplier.toFixed(2))
       });
 
       if (multiplier >= crashPoint) {
         clearInterval(interval);
 
-        console.log("💥 CRASHED AT:", crashPoint);
+        console.log("💥 CRASH:", crashPoint);
 
-        io.emit("crash-update", { crashpoint: crashPoint });
+        io.emit("crash-update", {
+          crashpoint: crashPoint
+        });
+
         io.emit("reset");
 
-        round++;
+        // 🧹 CLEANUP EVENTS
+        io.emit("removecrash");
+
+        // (optional) history update
+        io.emit("updatehistory", {
+          crash: crashPoint,
+          period: currentPeriod
+        });
+
         setTimeout(startGame, 3000);
       }
+
     }, 100);
+
   }, 2000);
 }
 
-// 🔥 SOCKET EVENTS
+// 🔌 SOCKET EVENTS
 io.on("connection", (socket) => {
-  console.log("✅ USER CONNECTED:", socket.id);
+
+  console.log("✅ CONNECTED:", socket.id);
 
   socket.onAny((event, data) => {
-    console.log("📡 EVENT:", event, data);
+    console.log("📡", event, data);
   });
-socket.on("addWin", async (username, amount, multiplier) => {
 
-  // ✅ force number
-  amount = parseFloat(amount);
-  multiplier = parseFloat(multiplier);
-
-  // ✅ 2 decimal fix
-  const fixedMultiplier = parseFloat(multiplier.toFixed(2));
-  const fixedAmount = parseFloat(amount.toFixed(2));
-
-  console.log("💸 CASHOUT:", username, fixedAmount, fixedMultiplier);
-
-  try {
-
-    const response = await axios.post(
-      "https://jalwagame5.shop/jet/trova/src/api/bet",
-      {
-        username: username,
-        amount: fixedAmount,
-        multiplier: fixedMultiplier
-      },
-      {
-        params: {
-          action: "cashout",
-          server: "Crash"
-        }
-      }
-    );
-
-    console.log("✅ API RESPONSE:", response.data);
-
-  } catch (err) {
-    console.log("❌ API ERROR:", err.message);
-  }
-
-});
-  // 👉 BET EVENT (IMPORTANT)
+  // 💰 BET
   socket.on("newBet", async (username, amount) => {
+
     console.log("💰 BET:", username, amount);
 
     try {
+
       const res = await axios.post(
         "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
         new URLSearchParams({
-          username: username,
+          username,
           period: currentPeriod,
           ans: "manual",
-          amount: amount
+          amount
         })
       );
 
-      console.log("✅ SAVED TO PHP:", res.data);
+      console.log("✅ BET RESPONSE:", res.data);
 
     } catch (err) {
-      console.log("❌ API ERROR:", err.message);
+      console.log("❌ BET ERROR:", err.message);
     }
   });
+
+  // 💸 CASHOUT
+  socket.on("addWin", async (username, amount, multiplier) => {
+
+    const winAmount = parseFloat(amount) * parseFloat(multiplier);
+
+    console.log("💸 CASHOUT:", username, winAmount);
+
+    try {
+
+      const res = await axios.post(
+        "https://jalwagame5.shop/jet/trova/src/api/bet",
+        {
+          username,
+          amount,
+          multiplier
+        },
+        {
+          params: {
+            action: "cashout",
+            server: "Crash"
+          }
+        }
+      );
+
+      console.log("✅ CASHOUT RESPONSE:", res.data);
+
+    } catch (err) {
+      console.log("❌ CASHOUT ERROR:", err.message);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log("❌ DISCONNECTED:", socket.id);
   });
+
 });
 
-// 🔥 Error protection (important for Railway)
+// 🛡️ ERROR SAFE
 process.on("uncaughtException", (err) => {
-  console.log("❌ UNCAUGHT:", err);
+  console.log("❌ ERROR:", err);
 });
 
 process.on("unhandledRejection", (err) => {
-  console.log("❌ PROMISE ERROR:", err);
+  console.log("❌ PROMISE:", err);
 });
 
-// 👉 Start game once
+// ▶️ START
 startGame();
 
-// 👉 Start server
 server.listen(PORT, () => {
-  console.log("🔥 SERVER RUNNING ON PORT:", PORT);
+  console.log("🔥 SERVER RUNNING:", PORT);
 });
