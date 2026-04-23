@@ -72,9 +72,32 @@ io.on("connection", (socket) => {
   socket.onAny((event, data) => {
     console.log("📡 EVENT:", event, data);
   });
-socket.on("addWin", async (username, multiplier, extra) => {
+socket.on("addWin", async (username, amount, multiplier) => {
 
-  console.log("💸 CASHOUT:", username, multiplier, extra);
+  console.log("💸 CASHOUT:", username, amount, multiplier);
+
+  try {
+
+    const response = await axios.post(
+      "https://jalwagame5.shop/jet/trova/src/api/bet",
+      {
+        username: username,
+        amount: amount,
+        multiplier: multiplier
+      },
+      {
+        params: {
+          action: "cashout",
+          server: "Crash"
+        }
+      }
+    );
+
+    console.log("✅ API RESPONSE:", response.data);
+
+  } catch (err) {
+    console.log("❌ API ERROR:", err.message);
+  }
 
 });
   // 👉 BET EVENT (IMPORTANT)
