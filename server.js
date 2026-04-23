@@ -58,13 +58,15 @@ async function startGame() {
         clearInterval(gameInterval);
         gameInterval = null;
 
-        const finalCrash = Number(crashPoint.toFixed(2));
+       let safeMultiplier = Number((multiplier + 0.01).toFixed(2));
 
-        console.log("💥 CRASH:", finalCrash);
+if (!safeMultiplier || isNaN(safeMultiplier)) {
+  safeMultiplier = 1.0;
+}
 
-        io.emit("crash-update", {
-          crashpoint: finalCrash,
-        });
+io.emit("crash-update", {
+  crashpoint: safeMultiplier
+});
 
         io.emit("reset");
         io.emit("removecrash");
