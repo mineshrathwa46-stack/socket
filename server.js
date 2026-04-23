@@ -25,52 +25,48 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("❌ DISCONNECTED:", socket.id);
   });
-socket.on("bet", (data) => {
-    console.log("BET RECEIVED:", data);
-  });
+socket.on("newBet", (s, t) => {
+  console.log("BET RECEIVED:", s, t);
+});
 
   socket.on("cashout", (data) => {
     console.log("CASHOUT:", data);
   });
-  function startGame() {
-    const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
-    let multiplier = 1.0;
+function startGame() {
+  const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
+  let multiplier = 1.0;
 
-    console.log("🚀 ROUND:", round, "CRASH:", crashPoint);
+  console.log("🚀 ROUND:", round, "CRASH:", crashPoint);
 
-    socket.emit("prepareplane");
+  io.emit("prepareplane");
 
-    setTimeout(() => {
-      socket.emit("flyplane");
+  setTimeout(() => {
+    io.emit("flyplane");
 
-      const interval = setInterval(() => {
-        multiplier += 0.01;
+    const interval = setInterval(() => {
+      multiplier += 0.01;
 
-        socket.emit("crash-update", {
-          crashpoint: parseFloat(multiplier.toFixed(2)),
-        });
+      io.emit("crash-update", {
+        crashpoint: parseFloat(multiplier.toFixed(2)),
+      });
 
-        socket.emit("working");
+      if (multiplier >= crashPoint) {
+        clearInterval(interval);
 
-        if (multiplier >= crashPoint) {
-          clearInterval(interval);
+        console.log("💥 CRASHED AT:", crashPoint);
 
-          console.log("💥 CRASHED AT:", crashPoint);
+        io.emit("crash-update", { crashpoint: crashPoint });
+        io.emit("reset");
 
-          socket.emit("crash-update", {
-            crashpoint: crashPoint,
-          });
+        round++;
+        setTimeout(startGame, 3000);
+      }
+    }, 100);
+  }, 2000);
+}
 
-          socket.emit("reset");
-
-          round++;
-
-          setTimeout(startGame, 3000);
-        }
-      }, 100);
-    }, 2000);
-  }
-
+// 👇 OUTSIDE connection
+startGame();
   startGame();
 });
 
