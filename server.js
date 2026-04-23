@@ -38,7 +38,9 @@ async function startGame() {
   setTimeout(() => {
 
     io.emit("flyplane");
-
+io.emit("crash-update", {
+  crashpoint: 1.0
+});
     let gameInterval = null;
 
     gameInterval = setInterval(async () => {
@@ -64,13 +66,13 @@ if (!safeMultiplier || isNaN(safeMultiplier)) {
   safeMultiplier = 1.0;
 }
 
-io.emit("crash-update", {
-  crashpoint: safeMultiplier
-});
+io.emit("crash-update", { crashpoint: finalCrash });
 
-        io.emit("reset");
-        io.emit("removecrash");
-
+// delay de
+setTimeout(() => {
+  io.emit("reset");
+  io.emit("removecrash");
+}, 50);
         // 📊 HISTORY FETCH
         try {
           const res = await axios.get(
