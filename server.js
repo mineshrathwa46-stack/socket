@@ -57,16 +57,16 @@ function startGame() {
           crashpoint: crashPoint
         });
 
-        io.emit("reset");
+        // io.emit("reset");
 
         // 🧹 CLEANUP EVENTS
         io.emit("removecrash");
 
         // (optional) history update
-        io.emit("updatehistory", {
-          crash: crashPoint,
-          period: currentPeriod
-        });
+        // io.emit("updatehistory", {
+        //   crash: crashPoint,
+        //   period: currentPeriod
+        // });
 
         setTimeout(startGame, 3000);
       }
@@ -84,7 +84,15 @@ io.on("connection", (socket) => {
   socket.onAny((event, data) => {
     console.log("📡", event, data);
   });
-
+socket.on("working", (s) => {
+  console.log("WORKING DATA:", s);
+});
+socket.on("reset", (s) => {
+  console.log("RESET DATA:", s);
+});
+socket.on("updatehistory", (s) => {
+  console.log("UPDATE HISTORY DATA:", s);
+});
   // 💰 BET
   socket.on("newBet", async (username, amount) => {
 
