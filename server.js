@@ -1,15 +1,10 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const axios = require("axios");
 
 const app = express();
 const server = http.createServer(app);
-
-const PORT = process.env.PORT || 3000;
-
-app.get("/", (req, res) => {
-  res.send("Socket running ✅");
-});
 
 const io = new Server(server, {
   cors: { origin: "*" },
@@ -19,19 +14,7 @@ const io = new Server(server, {
 
 let round = 1;
 
-io.on("connection", (socket) => {
-  console.log("✅ USER CONNECTED:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("❌ DISCONNECTED:", socket.id);
-  });
-socket.on("newBet", (s, t) => {
-  console.log("BET RECEIVED:", s, t);
-});
-
-  socket.on("cashout", (data) => {
-    console.log("CASHOUT:", data);
-  });
+// 🔥 GAME LOOP (GLOBAL)
 function startGame() {
   const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
   let multiplier = 1.0;
@@ -65,11 +48,36 @@ function startGame() {
   }, 2000);
 }
 
-// 👇 OUTSIDE connection
-startGame();
-  startGame();
+// 🔥 SOCKET EVENTS
+io.on("connection", (socket) => {
+  console.log("USER CONNECTED:", socket.id);
+
+  socket.on("newBet", async (username, amount) => {
+    console.log("BET:", username, amount);
+
+    try {
+      await axios.post(
+        "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
+        new URLSearchParams({
+          username: username,
+          period: Date.now(),
+          ans: "manual",
+          amount: amount
+        })
+      );
+    } catch (err) {
+      console.log("ERROR:", err.message);
+    }
+  });
+
+  socket.on("cashout", (data) => {
+    console.log("CASHOUT:", data);
+  });
 });
 
-server.listen(PORT, () => {
-  console.log("🔥 SERVER RUNNING ON PORT:", PORT);
+// 👉 start only once
+startGame();
+
+server.listen(3000, () => {
+  console.log("SERVER RUNNING");
 });
