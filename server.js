@@ -15,7 +15,7 @@ const io = new Server(server, {
 });
 
 // 🔢 PERIOD SYSTEM
-let period = 100000000000000;
+let period = 100000;
 let currentPeriod;
 
 function getNextPeriod() {
@@ -44,7 +44,7 @@ function startGame() {
       io.emit("crash-update", {
         crashpoint: parseFloat(multiplier.toFixed(2)),
       });
-
+console.log("📈 UPDATE:", parseFloat(multiplier.toFixed(2)));
       if (multiplier >= crashPoint) {
         clearInterval(interval);
 
@@ -53,6 +53,7 @@ function startGame() {
         io.emit("crash-update", {
           crashpoint: crashPoint,
         });
+        console.log("📉 FINAL:", crashPoint);
 
         io.emit("reset");
 
