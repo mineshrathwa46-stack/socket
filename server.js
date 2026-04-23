@@ -38,8 +38,9 @@ function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
-  io.emit("prepareplane");
-
+  io.emit("prepareplane", {
+  period: currentPeriod
+});
   setTimeout(() => {
     io.emit("flyplane");
 
