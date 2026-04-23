@@ -3,6 +3,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const axios = require("axios");
 
+
 const app = express();
 const server = http.createServer(app);
 
@@ -24,7 +25,7 @@ function getNextPeriod() {
 }
 
 // 🎮 GAME LOOP
-function startGame() {
+async function startGame() {
   currentPeriod = getNextPeriod();
   let multiplier = 1.0;
   const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
@@ -44,30 +45,42 @@ function startGame() {
       io.emit("crash-update", {
         crashpoint: parseFloat(multiplier.toFixed(2)),
       });
-      if (multiplier >= crashPoint) {
-        clearInterval(interval);
+     if (multiplier >= crashPoint) {
+  clearInterval(interval);
 
-        console.log("💥 CRASH:", crashPoint);
+  console.log("💥 CRASH:", crashPoint);
 
-        io.emit("crash-update", {
-          crashpoint: crashPoint,
-        });
-        console.log("📉 FINAL:", crashPoint);
+  const finalCrash = Number(crashPoint.toFixed(2));
 
-        io.emit("reset");
+  io.emit("crash-update", {
+    crashpoint: finalCrash,
+  });
 
-        // 🧹 CLEANUP EVENTS
-        io.emit("removecrash");
-const res = await axios.get(
-  "https://jalwagame5.shop/jet/trova/src/api/bet?action=gethistory"
-);
+  console.log("📉 FINAL:", finalCrash);
 
-io.emit("updatehistory", res.data);
-console.log("📊 HISTORY UPDATED:", res.data);
-        // (optional) history update
-        console.log("📊 HISTORY:", currentPeriod, crashPoint);
-        setTimeout(startGame, 3000);
-      }
+  io.emit("reset");
+  io.emit("removecrash");
+
+  try {
+    const res = await axios.get(
+      "https://jalwagame5.shop/jet/trova/src/api/bet?action=gethistory"
+    );
+
+    // ✅ IMPORTANT: ensure array
+    if (Array.isArray(res.data)) {
+      io.emit("updatehistory", res.data);
+    } else {
+      console.log("❌ Invalid history format:", res.data);
+    }
+
+    console.log("📊 HISTORY UPDATED:", res.data);
+
+  } catch (err) {
+    console.log("❌ HISTORY ERROR:", err.message);
+  }
+
+  setTimeout(startGame, 3000);
+}
     }, 100);
   }, 2000);
 }
