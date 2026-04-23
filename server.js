@@ -25,7 +25,13 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("❌ DISCONNECTED:", socket.id);
   });
+socket.on("bet", (data) => {
+    console.log("BET RECEIVED:", data);
+  });
 
+  socket.on("cashout", (data) => {
+    console.log("CASHOUT:", data);
+  });
   function startGame() {
     const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
     let multiplier = 1.0;
