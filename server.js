@@ -63,10 +63,10 @@ function startGame() {
         io.emit("removecrash");
 
         // (optional) history update
-        // io.emit("updatehistory", {
-        //   crash: crashPoint,
-        //   period: currentPeriod
-        // });
+        io.emit("updatehistory", {
+          crash: crashPoint,
+          period: currentPeriod
+        });
 
         setTimeout(startGame, 3000);
       }
@@ -89,9 +89,6 @@ socket.on("working", (s) => {
 });
 socket.on("reset", (s) => {
   console.log("RESET DATA:", s);
-});
-socket.on("updatehistory", (s) => {
-  console.log("UPDATE HISTORY DATA:", s);
 });
   // 💰 BET
   socket.on("newBet", async (username, amount) => {
