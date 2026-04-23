@@ -38,33 +38,47 @@ function startGame() {
     // ✈️ START
     io.emit("flyplane");
 
-    const interval = setInterval(() => {
-      multiplier += 0.01;
+    let gameInterval = null;
 
+    gameInterval = setInterval(() => {
+      // ✅ safe increment
+      multiplier = Number((multiplier + 0.01).toFixed(2));
+
+      // ✅ safety check
+      if (!multiplier || isNaN(multiplier)) {
+        console.log("⚠️ FIXED NaN multiplier");
+        multiplier = 1.0;
+      }
+
+      // ✅ always send valid number
       io.emit("crash-update", {
-        crashpoint: parseFloat(multiplier.toFixed(2)),
+        crashpoint: multiplier,
       });
 
+      // 💥 crash condition
       if (multiplier >= crashPoint) {
-        clearInterval(interval);
+        clearInterval(gameInterval);
+        gameInterval = null;
 
-        console.log("💥 CRASH:", crashPoint);
+        const finalCrash = Number(crashPoint.toFixed(2));
 
+        console.log("💥 CRASH:", finalCrash);
+
+        // ✅ final safe value
         io.emit("crash-update", {
-          crashpoint: crashPoint,
+          crashpoint: finalCrash,
         });
 
+        // 🔄 reset events
         io.emit("reset");
-
-        // 🧹 CLEANUP EVENTS
         io.emit("removecrash");
 
-        // (optional) history update
         io.emit("updatehistory", {
-          crash: crashPoint,
+          crash: finalCrash,
           period: currentPeriod,
         });
 
+        // 🚀 next round
         setTimeout(startGame, 3000);
       }
     }, 100);
