@@ -32,7 +32,7 @@ let round = 1;
 
 // 🔥 GLOBAL GAME LOOP (sirf 1 baar chalega)
 function startGame() {
-  const currentPeriod = getNextPeriod();
+  currentPeriod = getNextPeriod();
   const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
   let multiplier = 1.0;
 
