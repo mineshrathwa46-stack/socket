@@ -20,17 +20,14 @@ const io = new Server(server, {
 let round = 1;
 
 io.on("connection", (socket) => {
-  console.log("✅ USER CONNECTED:", socket.id);
 
   socket.on("disconnect", () => {
-    console.log("❌ DISCONNECTED:", socket.id);
   });
 
   function startGame() {
     const crashPoint = parseFloat((Math.random() * 5 + 1).toFixed(2));
     let multiplier = 1.0;
 
-    console.log("🚀 ROUND:", round, "CRASH:", crashPoint);
 
     socket.emit("prepareplane");
 
@@ -48,8 +45,6 @@ io.on("connection", (socket) => {
 
         if (multiplier >= crashPoint) {
           clearInterval(interval);
-
-          console.log("💥 CRASHED AT:", crashPoint);
 
           socket.emit("crash-update", {
             crashpoint: crashPoint,
