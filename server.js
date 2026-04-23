@@ -15,7 +15,7 @@ const io = new Server(server, {
 });
 
 // 🔢 PERIOD SYSTEM
-let period = 100000;
+let period = 100000000000000;
 let currentPeriod;
 
 function getNextPeriod() {
