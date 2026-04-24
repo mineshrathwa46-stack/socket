@@ -30,8 +30,17 @@ function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
-  io.emit("working");
-  io.emit("prepareplane");
+  setTimeout(() => {
+    io.emit("working");
+  }, 10000);
+
+setTimeout(() => {
+io.emit("prepareplane");
+  }, 10000);
+
+  
+
+
   setTimeout(() => {
     io.emit("flyplane");
     io.emit("crash-update", { crashpoint: 1.0 });
@@ -49,22 +58,19 @@ function startGame() {
 
         console.log("💥 CRASH:", finalCrash);
 
-       io.emit("crash-update", { crashpoint: finalCrash });
+        io.emit("crash-update", { crashpoint: finalCrash });
 
 setTimeout(() => {
 
-  // ✅ 1. force reset value (IMPORTANT)
+  // ✅ FORCE RESET TO 1.0 (IMPORTANT)
   io.emit("crash-update", { crashpoint: 1.0 });
 
-  // ✅ 2. thoda gap (UI sync)
   setTimeout(() => {
-
     io.emit("reset");
     io.emit("removecrash");
+  }, 100);
 
-  }, 15000);
-
-}, 8000);
+}, 1000);
         setTimeout(async () => {
           try {
             const res = await axios.get(
@@ -120,7 +126,7 @@ setTimeout(() => {
           }
         }, 600);
 
-        setTimeout(startGame, 3000);
+        setTimeout(startGame, 10000);
       }
     }, 100);
   }, 10000);
