@@ -60,17 +60,11 @@ io.emit("prepareplane");
 
         io.emit("crash-update", { crashpoint: finalCrash });
 
-setTimeout(() => {
-
   // ✅ FORCE RESET TO 1.0 (IMPORTANT)
   io.emit("crash-update", { crashpoint: 1.0 });
-
-  setTimeout(() => {
     io.emit("reset");
     io.emit("removecrash");
-  }, 100);
-
-}, 1000);
+  
         setTimeout(async () => {
           try {
             const res = await axios.get(
@@ -125,11 +119,9 @@ setTimeout(() => {
             ]);
           }
         }, 600);
-
-        setTimeout(startGame, 10000);
       }
     }, 100);
-  }, 10000);
+  }, 100000);
 }
 
 // 🔌 SOCKET
