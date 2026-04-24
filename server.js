@@ -58,14 +58,14 @@ function startGame() {
 
         // 🧹 CLEANUP EVENTS
         io.emit("removecrash");
-const res = await axios.get(
-  "https://jalwagame5.shop/jet/trova/src/api/bet?action=gethistory"
-);
 
-io.emit("updatehistory", res.data);
-console.log("📊 HISTORY UPDATED:", res.data);
         // (optional) history update
-        console.log("📊 HISTORY:", currentPeriod, crashPoint);
+        io.emit("updatehistory", {
+          crash: crashPoint,
+          period: currentPeriod,
+          
+        });
+console.log("📊 HISTORY:", currentPeriod, crashPoint);
         setTimeout(startGame, 3000);
       }
     }, 100);
