@@ -29,16 +29,19 @@ function startGame() {
   const crashPoint = Number((Math.random() * 5 + 1).toFixed(2));
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
- io.emit("reset");
+   setTimeout(() => {
+  io.emit("working");       // waiting start
+}, 1000);
 
-io.emit("prepareplane");
+setTimeout(() => {
+  io.emit("prepareplane");
+}, 2500);
 
-  
 
 
-  setTimeout(() => {
-    io.emit("flyplane");
-    io.emit("crash-update", { crashpoint: 1.0 });
+     setTimeout(() => {
+         io.emit("flyplane");
+           io.emit("crash-update", { crashpoint: 1.0 });
 
     let interval = setInterval(() => {
       multiplier = Number((multiplier + 0.01).toFixed(2));
@@ -53,11 +56,24 @@ io.emit("prepareplane");
 
         console.log("💥 CRASH:", finalCrash);
 
-        io.emit("crash-update", { crashpoint: finalCrash });
+        // 1️⃣ crash show
+io.emit("crash-update", { crashpoint: finalCrash });
 
-  // ✅ FORCE RESET TO 1.0 (IMPORTANT)
+// 2️⃣ user ko dekhne de
+setTimeout(() => {
+
+  // 3️⃣ reset UI (value ko 1 pe laa)
   io.emit("crash-update", { crashpoint: 1.0 });
-    io.emit("removecrash");
+
+  // 4️⃣ thoda gap
+  setTimeout(() => {
+
+    io.emit("reset");        // UI clear
+    io.emit("removecrash");  // cleanup
+
+  }, 150);
+
+}, 800);
   
         setTimeout(async () => {
           try {
@@ -96,7 +112,7 @@ io.emit("prepareplane");
                 },
               ];
             }
-
+            io.emit("reset"); 
             io.emit("updatehistory", history);
             console.log("📊 HISTORY OK");
           } catch (err) {
