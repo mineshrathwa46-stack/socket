@@ -12,13 +12,10 @@ const io = new Server(server, {
   cors: { origin: "*" },
   transports: ["websocket"],
 });
-
-// 🔢 PERIOD
-let period = 100000000000000;
 let currentPeriod;
 
 function getNextPeriod() {
-  return ++period;
+  return Date.now();
 }
 
 // 🎮 GAME LOOP
