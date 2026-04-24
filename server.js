@@ -31,12 +31,13 @@ function startGame() {
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
   io.emit("removecrash");
     io.emit("working"); // waiting
-  setTimeout(() => {
     io.emit("prepareplane");
-  }, 1000);
+
 
   setTimeout(() => {
+    setTimeout(() => {
     io.emit("flyplane");
+    }, 500);
     io.emit("crash-update", { crashpoint: 1.0 });
 
     let interval = setInterval(() => {
@@ -109,7 +110,7 @@ function startGame() {
           }
         }, 600);
 
-        setTimeout(startGame, 10000);
+        setTimeout(startGame, 5000);
       }
     }, 100);
   }, 1000);
