@@ -70,7 +70,6 @@ async function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
-  io.emit("removecrash");
   io.emit("working");
   io.emit("prepareplane");
 
@@ -118,7 +117,7 @@ async function startGame() {
 
       io.emit("crash-update", { crashpoint: finalCrash });
       io.emit("reset");
-
+io.emit("removecrash");
       setTimeout(startGame, 15000);
     }
 
