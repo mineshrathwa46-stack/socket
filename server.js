@@ -104,16 +104,26 @@ function startGame() {
             console.log("❌ HISTORY ERROR:", err.message);
 
             // fallback safe
-           if (Array.isArray(res.data)) {
+          const fixedHistory = res.data.map(item => {
 
-  const fixedHistory = res.data.map(item => ({
-    time: item.time || Date.now(),
-    bet: item.bet || 10,
-    mult: item.mult > 0 ? item.mult : 1.0, // ✅ FIX
-    cashout: item.cashout || 0
-  }));
+  const time = item.time 
+    || (item.created_at ? new Date(item.created_at).getTime() : Date.now());
 
-  io.emit("updatehistory", fixedHistory);
+  const bet = Number(item.bet || item.amount || 10);
+
+  const mult = Number(item.mult || item.crash || 1.0);
+  
+  const cashout = Number(item.cashout || (bet * mult) || 0);
+
+  return {
+    time,
+    bet,
+    mult: mult > 0 ? mult : 1.0, // ❗ never 0
+    cashout
+  };
+});
+
+io.emit("updatehistory", fixedHistory);;
 }
           }
 
@@ -136,7 +146,18 @@ io.on("connection", (socket) => {
   socket.onAny((event, data) => {
     console.log("📡", event, data);
   });
+socket.on("userid", (userId, payload) => {
 
+  // ignore spam
+  if (socket.userId) return;
+
+  // ignore agar payload bada hai (history aa rahi hai)
+  if (payload && typeof payload === "object") {
+    console.log("⚠️ Ignoring payload spam");
+  }
+
+  socket.userId = userId;
+});
   // 💰 BET
   socket.on("newBet", async (username, amount) => {
 
