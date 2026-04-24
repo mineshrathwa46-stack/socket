@@ -24,7 +24,6 @@ function getNextPeriod() {
 
 // 🎮 GAME LOOP
 function startGame() {
-
   currentPeriod = getNextPeriod();
   let multiplier = 1.0;
   const crashPoint = Number((Math.random() * 5 + 1).toFixed(2));
@@ -34,19 +33,16 @@ function startGame() {
   io.emit("working");
   io.emit("prepareplane");
   setTimeout(() => {
-
     io.emit("flyplane");
     io.emit("crash-update", { crashpoint: 1.0 });
 
     let interval = setInterval(() => {
-
       multiplier = Number((multiplier + 0.01).toFixed(2));
       if (!multiplier || isNaN(multiplier)) multiplier = 1;
 
       io.emit("crash-update", { crashpoint: multiplier });
 
       if (multiplier >= crashPoint) {
-
         clearInterval(interval);
 
         const finalCrash = Number(crashPoint.toFixed(2));
@@ -55,8 +51,20 @@ function startGame() {
 
         io.emit("crash-update", { crashpoint: finalCrash });
 
-        setTimeout(async () => {
+        // 👇 user ko crash dekhne de
+        setTimeout(() => {
+          // ✅ STEP 1: clear multiplier
+          io.emit("crash-update", { crashpoint: null });
 
+          // 👇 thoda gap
+          setTimeout(() => {
+            // ✅ STEP 2: reset UI
+            io.emit("reset");
+            io.emit("removecrash");
+          }, 100);
+        }, 1000);
+
+        setTimeout(async () => {
           io.emit("reset");
           io.emit("removecrash");
 
@@ -64,67 +72,65 @@ function startGame() {
           try {
             const res = await axios.get(
               "https://jalwagame5.shop/jet/trova/src/api/bet?action=gethistory",
-              { timeout: 5000 }
+              { timeout: 5000 },
             );
 
             let history = [];
 
             if (Array.isArray(res.data)) {
-
-              history = res.data.map(item => {
-
-                const time = item.time 
-                  || (item.created_at ? new Date(item.created_at).getTime() : Date.now());
+              history = res.data.map((item) => {
+                const time =
+                  item.time ||
+                  (item.created_at
+                    ? new Date(item.created_at).getTime()
+                    : Date.now());
 
                 const bet = Number(item.bet || item.amount || 10);
 
                 const multRaw = Number(item.mult || item.crash || 1.0);
                 const mult = multRaw > 0 ? multRaw : 1.0;
 
-                const cashout = Number(item.cashout || (bet * mult) || 0);
+                const cashout = Number(item.cashout || bet * mult || 0);
 
                 return { time, bet, mult, cashout };
               });
-
             } else {
               // fallback
-              history = [{
-                time: Date.now(),
-                bet: 10,
-                mult: finalCrash,
-                cashout: 0
-              }];
+              history = [
+                {
+                  time: Date.now(),
+                  bet: 10,
+                  mult: finalCrash,
+                  cashout: 0,
+                },
+              ];
             }
 
             io.emit("updatehistory", history);
             console.log("📊 HISTORY OK");
-
           } catch (err) {
-
             console.log("❌ HISTORY ERROR:", err.message);
 
             // safe fallback
-            io.emit("updatehistory", [{
-              time: Date.now(),
-              bet: 10,
-              mult: finalCrash,
-              cashout: 0
-            }]);
+            io.emit("updatehistory", [
+              {
+                time: Date.now(),
+                bet: 10,
+                mult: finalCrash,
+                cashout: 0,
+              },
+            ]);
           }
-
         }, 600);
 
         setTimeout(startGame, 3000);
       }
-
     }, 100);
-
   }, 10000);
 }
 
 // 🔌 SOCKET
 io.on("connection", (socket) => {
-
   console.log("✅ CONNECTED:", socket.id);
 
   socket.onAny((event, data) => {
@@ -141,7 +147,6 @@ io.on("connection", (socket) => {
 
   // 💰 BET
   socket.on("newBet", async (username, amount) => {
-
     if (!amount || amount <= 0) return;
 
     try {
@@ -151,12 +156,11 @@ io.on("connection", (socket) => {
           username,
           period: currentPeriod,
           ans: "manual",
-          amount
-        })
+          amount,
+        }),
       );
 
       console.log("✅ BET:", res.data);
-
     } catch (err) {
       console.log("❌ BET ERROR:", err.message);
     }
@@ -164,7 +168,6 @@ io.on("connection", (socket) => {
 
   // 💸 CASHOUT
   socket.on("addWin", async (username, amount, multiplier) => {
-
     amount = Number(amount);
     multiplier = Number(multiplier);
 
@@ -179,18 +182,17 @@ io.on("connection", (socket) => {
         {
           username,
           amount: fixedAmount,
-          multiplier: fixedMultiplier
+          multiplier: fixedMultiplier,
         },
         {
           params: {
             action: "cashout",
-            server: "Crash"
-          }
-        }
+            server: "Crash",
+          },
+        },
       );
 
       console.log("💸 CASHOUT:", res.data);
-
     } catch (err) {
       console.log("❌ CASHOUT ERROR:", err.message);
     }
@@ -202,8 +204,8 @@ io.on("connection", (socket) => {
 });
 
 // 🛡️ ERRORS
-process.on("uncaughtException", err => console.log("❌ ERROR:", err));
-process.on("unhandledRejection", err => console.log("❌ PROMISE:", err));
+process.on("uncaughtException", (err) => console.log("❌ ERROR:", err));
+process.on("unhandledRejection", (err) => console.log("❌ PROMISE:", err));
 
 // ▶️ START
 startGame();
