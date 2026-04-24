@@ -49,19 +49,22 @@ function startGame() {
 
         console.log("💥 CRASH:", finalCrash);
 
-        io.emit("crash-update", { crashpoint: finalCrash });
+       io.emit("crash-update", { crashpoint: finalCrash });
 
 setTimeout(() => {
 
-  // ✅ FORCE RESET TO 1.0 (IMPORTANT)
+  // ✅ 1. force reset value (IMPORTANT)
   io.emit("crash-update", { crashpoint: 1.0 });
 
+  // ✅ 2. thoda gap (UI sync)
   setTimeout(() => {
+
     io.emit("reset");
     io.emit("removecrash");
-  }, 100);
 
-}, 1000);
+  }, 15000);
+
+}, 8000);
         setTimeout(async () => {
           try {
             const res = await axios.get(
