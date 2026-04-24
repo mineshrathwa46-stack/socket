@@ -119,7 +119,7 @@ async function startGame() {
       io.emit("crash-update", { crashpoint: finalCrash });
       io.emit("reset");
 
-      setTimeout(startGame, 5000);
+      setTimeout(startGame, 15000);
     }
 
     runCrashLoop();
