@@ -95,38 +95,41 @@ io.on("connection", (socket) => {
   // 💰 BET
   socket.on("newBet", async (username, amount) => {
 
-    if (!amount || amount <= 0) return;
+  const fixedAmount = Number(parseFloat(amount).toFixed(2));
 
-    try {
-      const res = await axios.post(
-        "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
-        new URLSearchParams({
-          username,
-          period: currentPeriod,
-          ans: "manual",
-          amount,
-        })
-      );
+  if (!fixedAmount || fixedAmount <= 0) return;
 
-      console.log("✅ BET:", res.data);
+  try {
+    const res = await axios.post(
+      "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
+      new URLSearchParams({
+        username,
+        period: currentPeriod,
+        ans: "manual",
+        amount: fixedAmount,
+      })
+    );
 
-    } catch (err) {
-      console.log("❌ BET ERROR:", err.message);
-    }
-  });
+    console.log("✅ BET:", res.data);
+
+  } catch (err) {
+    console.log("❌ BET ERROR:", err.message);
+  }
+});
 
   // 💸 CASHOUT
   socket.on("addWin", async (username, amount, multiplier) => {
 
   if (!amount || amount <= 0) return;
-
+  const fixedMultiplier = Number(multiplier.toFixed(2));
+  const fixedAmount = Number(parseFloat(amount).toFixed(2));
   try {
     const res = await axios.post(
       "https://jalwagame5.shop/jet/trova/src/api/bet",
       {
         username,
-        amount,
-        multiplier,
+        amount: fixedAmount,
+        multiplier: fixedMultiplier,
         period: currentPeriod   // 🔥 ADD THIS
       },
       {
