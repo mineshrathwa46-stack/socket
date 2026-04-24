@@ -2,7 +2,6 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const axios = require("axios");
-const { userInfo } = require("os");
 
 const app = express();
 const server = http.createServer(app);
@@ -57,47 +56,39 @@ function startGame() {
         io.emit("crash-update", { crashpoint: finalCrash });
         io.emit("reset");
         setTimeout(async () => {
-          try {
-            const res = await axios.get(
-              "https://jalwagame5.shop/jet/trova/src/api/bet",
-              {
-                params: {
-                  action: "gethistory",
-                  username: userId, // ⚠️ yaha dynamic user bhi kar sakta
+          for (const [id, socket] of io.sockets.sockets) {
+            if (!socket.userId) continue;
+
+            try {
+              const res = await axios.get(
+                "https://jalwagame5.shop/jet/trova/src/api/bet",
+                {
+                  params: {
+                    action: "gethistory",
+                    username: socket.userId,
+                  },
+                  timeout: 5000,
                 },
-                timeout: 5000,
-              },
-            );
+              );
 
-            let history = [];
+              let history = [];
 
-            if (Array.isArray(res.data)) {
-              history = res.data.map((item) => ({
-                time: Number(item.time),
-                bet: Number(item.bet),
-                mult: Number(item.mult),
-                cashout: Number(item.cashout),
-              }));
+              if (Array.isArray(res.data)) {
+                history = res.data.map((item) => ({
+                  time: Number(item.time),
+                  bet: Number(item.bet),
+                  mult: Number(item.mult),
+                  cashout: Number(item.cashout),
+                }));
+              }
+
+              // ✅ send per user
+              socket.emit("updatehistory", history);
+
+              console.log("📊 HISTORY SENT:", socket.userId);
+            } catch (err) {
+              console.log("❌ HISTORY ERROR:", err.message);
             }
-
-            // ✅ SEND TO FRONTEND
-            io.emit("updatehistory", history);
-
-            console.log("📊 HISTORY SENT:", history);
-
-            console.log("📊 HISTORY OK");
-          } catch (err) {
-            console.log("❌ HISTORY ERROR:", err.message);
-
-            // safe fallback
-            io.emit("updatehistory", [
-              {
-                time: Date.now(),
-                bet: 10,
-                mult: finalCrash,
-                cashout: 0,
-              },
-            ]);
           }
         }, 600);
 
@@ -116,8 +107,7 @@ io.on("connection", (socket) => {
   });
 
   // 🔒 USER FIX
-   socket.on("userid", (userId) => {
-
+  socket.on("userid", (userId) => {
     if (!userId) return;
 
     socket.userId = userId; // ✅ store user
