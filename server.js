@@ -30,14 +30,13 @@ function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
   io.emit("removecrash");
-    io.emit("working"); // waiting
-    io.emit("prepareplane");
-
+  io.emit("working"); // waiting
+  io.emit("prepareplane");
 
   setTimeout(() => {
     setTimeout(() => {
-    io.emit("flyplane");
-    io.emit("crash-update", { crashpoint: 1.0 });
+      io.emit("flyplane");
+      io.emit("crash-update", { crashpoint: 1.0 });
     }, 1000);
 
     let interval = setInterval(() => {
@@ -59,56 +58,60 @@ function startGame() {
         setTimeout(async () => {
           try {
             const res = await axios.get(
-              "https://jalwagame5.shop/jet/trova/src/api/bet?action=gethistory",
-              { timeout: 5000 },
+              "https://jalwagame5.shop/jet/trova/src/api/bet",
+              {
+                params: {
+                  action: "gethistory",
+                  username: username, // 👈 IMPORTANT
+                },
+                timeout: 5000,
+              },
             );
-
             let history = [];
-console.log("📊 HISTORY RESPONSE:", res.data);
-           if (Array.isArray(res.data)) {
-  history = res.data.map((item) => {
+            console.log("📊 HISTORY RESPONSE:", res.data);
+            if (Array.isArray(res.data)) {
+              history = res.data.map((item) => {
+                // ✅ SAFE TIME
+                let time = Date.now();
+                if (item.time && !isNaN(item.time)) {
+                  time = Number(item.time);
+                } else if (item.created_at) {
+                  const t = new Date(item.created_at).getTime();
+                  if (!isNaN(t)) time = t;
+                }
 
-    // ✅ SAFE TIME
-    let time = Date.now();
-    if (item.time && !isNaN(item.time)) {
-      time = Number(item.time);
-    } else if (item.created_at) {
-      const t = new Date(item.created_at).getTime();
-      if (!isNaN(t)) time = t;
-    }
+                // ✅ SAFE BET
+                const betRaw = item.bet ?? item.amount ?? 10;
+                const bet = isNaN(Number(betRaw)) ? 10 : Number(betRaw);
 
-    // ✅ SAFE BET
-    const betRaw = item.bet ?? item.amount ?? 10;
-    const bet = isNaN(Number(betRaw)) ? 10 : Number(betRaw);
+                // ✅ SAFE MULT
+                const multRaw = item.mult ?? item.crash ?? 1;
+                let mult = Number(multRaw);
+                if (isNaN(mult) || mult <= 0) mult = 1;
 
-    // ✅ SAFE MULT
-    const multRaw = item.mult ?? item.crash ?? 1;
-    let mult = Number(multRaw);
-    if (isNaN(mult) || mult <= 0) mult = 1;
+                // ✅ SAFE CASHOUT
+                let cashout = Number(item.cashout);
+                if (isNaN(cashout)) {
+                  cashout = bet * mult;
+                }
 
-    // ✅ SAFE CASHOUT
-    let cashout = Number(item.cashout);
-    if (isNaN(cashout)) {
-      cashout = bet * mult;
-    }
-
-    return {
-      time,
-      bet,
-      mult,
-      cashout,
-    };
-  });
-} else {
-  history = [
-    {
-      time: Date.now(),
-      bet: 10,
-      mult: finalCrash,
-      cashout: 0,
-    },
-  ];
-}
+                return {
+                  time,
+                  bet,
+                  mult,
+                  cashout,
+                };
+              });
+            } else {
+              history = [
+                {
+                  time: Date.now(),
+                  bet: 10,
+                  mult: finalCrash,
+                  cashout: 0,
+                },
+              ];
+            }
             io.emit("updatehistory", history);
             console.log("📊 HISTORY OK");
           } catch (err) {
@@ -142,10 +145,24 @@ io.on("connection", (socket) => {
 
   // 🔒 USER FIX
   socket.on("userid", (userId, payload) => {
-    if (socket.userId) return;
+    // ✅ FIX 1: agar array aa raha hai → usko clean karo
+    if (Array.isArray(payload)) {
+      payload = null; // history hata diya
+    }
+
+    // ✅ FIX 2: agar object hai (history type)
+    if (payload && typeof payload === "object") {
+      payload = null;
+    }
+
+    // ✅ FIX 3: userId validate
     if (!userId || typeof userId !== "string") return;
-    socket.userId = userId.trim();
-    console.log("👤 USER:", socket.userId);
+
+    // ✅ FIX 4: ek baar hi set hone do
+    if (!socket.userId) {
+      socket.userId = userId.trim();
+      console.log("👤 USER SET:", socket.userId);
+    }
   });
 
   // 💰 BET
