@@ -15,21 +15,17 @@ const io = new Server(server, {
 
 let currentPeriod;
 
-// 🔗 API URL
 const API = "https://jalwagame5.shop/jet/trova/src/api/api_crash.php";
 
-// 🎯 PERIOD
 function getNextPeriod() {
   return Date.now();
 }
 
-// 🔥 GET crash (API)
 async function getCrashFromAPI() {
   try {
     const res = await axios.get(API, {
       params: { action: "get" }
     });
-
     return res.data.crashpoint;
   } catch (err) {
     console.log("❌ GET API ERROR:", err.message);
@@ -37,7 +33,6 @@ async function getCrashFromAPI() {
   }
 }
 
-// 🔥 RESET crash
 async function resetCrashAPI() {
   try {
     await axios.get(API, {
@@ -48,7 +43,6 @@ async function resetCrashAPI() {
   }
 }
 
-// 🔥 SET crash (admin)
 async function setCrashAPI(value) {
   try {
     await axios.post(
@@ -67,9 +61,6 @@ async function setCrashAPI(value) {
 async function startGame() {
   currentPeriod = getNextPeriod();
 
-  let multiplier = 1.0;
-
-  // 👉 API check
   const dbCrash = await getCrashFromAPI();
 
   const crashPoint =
@@ -85,46 +76,53 @@ async function startGame() {
 
   setTimeout(() => {
     io.emit("flyplane");
-    io.emit("crash-update", { crashpoint: 1.0 });
 
-    let interval = setInterval(async () => {
-      multiplier = Number((multiplier + 0.01).toFixed(2));
+    let startTime = Date.now();
+
+    function runCrashLoop() {
+      let elapsed = (Date.now() - startTime) / 1000;
+
+      // 🔥 SAME SPEED FOR ALL ROUNDS
+      let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
 
       io.emit("crash-update", { crashpoint: multiplier });
 
       if (multiplier >= crashPoint) {
-        clearInterval(interval);
-
-        const finalCrash = Number(crashPoint.toFixed(2));
-
-        console.log("💥 CRASH:", finalCrash);
-
-        // 💾 SAVE CRASH
-        try {
-          await axios.post(
-            "https://jalwagame5.shop/jet/trova/src/api/bet",
-            new URLSearchParams({
-              crashpoint: finalCrash,
-              id: currentPeriod,
-              time: new Date().toISOString(),
-            }),
-            { params: { action: "savecrash" } }
-          );
-
-          console.log("💾 SAVED:", finalCrash);
-        } catch (err) {
-          console.log("❌ SAVE ERROR:", err.message);
-        }
-
-        // 🔥 RESET API
-        await resetCrashAPI();
-
-        io.emit("crash-update", { crashpoint: finalCrash });
-        io.emit("reset");
-
-        setTimeout(startGame, 5000);
+        finishGame();
+        return;
       }
-    }, 100);
+
+      setTimeout(runCrashLoop, 100);
+    }
+
+    async function finishGame() {
+      const finalCrash = Number(crashPoint.toFixed(2));
+
+      console.log("💥 CRASH:", finalCrash);
+
+      try {
+        await axios.post(
+          "https://jalwagame5.shop/jet/trova/src/api/bet",
+          new URLSearchParams({
+            crashpoint: finalCrash,
+            id: currentPeriod,
+            time: new Date().toISOString(),
+          }),
+          { params: { action: "savecrash" } }
+        );
+      } catch (err) {
+        console.log("❌ SAVE ERROR:", err.message);
+      }
+
+      await resetCrashAPI();
+
+      io.emit("crash-update", { crashpoint: finalCrash });
+      io.emit("reset");
+
+      setTimeout(startGame, 5000);
+    }
+
+    runCrashLoop();
   }, 1000);
 }
 
@@ -132,12 +130,10 @@ async function startGame() {
 io.on("connection", (socket) => {
   console.log("✅ CONNECTED:", socket.id);
 
-  // 👤 USER
   socket.on("userid", (userId) => {
     socket.userId = userId;
   });
 
-  // 💰 BET
   socket.on("newBet", async (username, amount) => {
     const fixedAmount = Number(parseFloat(amount).toFixed(2));
     if (!fixedAmount || fixedAmount <= 0) return;
@@ -157,7 +153,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // 💸 CASHOUT
   socket.on("addWin", async (username, amount, multiplier) => {
     if (!amount || amount <= 0) return;
 
@@ -185,12 +180,10 @@ io.on("connection", (socket) => {
     }
   });
 
-  // 🔥 ADMIN CONTROL (API based)
   socket.on("adminCrash", async (data) => {
     if (!data || data.key !== "SECRET123") return;
 
     const value = Number(parseFloat(data.value).toFixed(2));
-
     if (!value || value < 1) return;
 
     await setCrashAPI(value);
