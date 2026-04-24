@@ -2,7 +2,6 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const axios = require("axios");
-const mysql = require("mysql2/promise");
 
 const app = express();
 const server = http.createServer(app);
@@ -14,38 +13,54 @@ const io = new Server(server, {
   transports: ["websocket"],
 });
 
-// ✅ DB
-const db = mysql.createPool({
-  host: "184.174.36.72",
-  user: "jalwagam_minurtw",
-  password: "Minurtw@12345",
-  database: "jalwagam_minurtw"
-});
-
 let currentPeriod;
 
+// 🔗 API URL
+const API = "https://jalwagame5.shop/jet/trova/src/api/api_crash.php";
+
+// 🎯 PERIOD
 function getNextPeriod() {
   return Date.now();
 }
 
-// 🔥 DB check function
-async function getCrashFromDB() {
-  const [rows] = await db.query(
-    "SELECT crashpoint FROM crash_admin_control WHERE id = 1"
-  );
+// 🔥 GET crash (API)
+async function getCrashFromAPI() {
+  try {
+    const res = await axios.get(API, {
+      params: { action: "get" }
+    });
 
-  if (rows.length && rows[0].crashpoint !== null) {
-    return Number(rows[0].crashpoint);
+    return res.data.crashpoint;
+  } catch (err) {
+    console.log("❌ GET API ERROR:", err.message);
+    return null;
   }
-
-  return null;
 }
 
-// 🔥 reset DB
-async function resetCrashDB() {
-  await db.query(
-    "UPDATE crash_admin_control SET crashpoint = NULL WHERE id = 1"
-  );
+// 🔥 RESET crash
+async function resetCrashAPI() {
+  try {
+    await axios.get(API, {
+      params: { action: "reset" }
+    });
+  } catch (err) {
+    console.log("❌ RESET ERROR:", err.message);
+  }
+}
+
+// 🔥 SET crash (admin)
+async function setCrashAPI(value) {
+  try {
+    await axios.post(
+      API + "?action=set",
+      new URLSearchParams({
+        crashpoint: value,
+        key: "SECRET123"
+      })
+    );
+  } catch (err) {
+    console.log("❌ SET ERROR:", err.message);
+  }
 }
 
 // 🎮 GAME LOOP
@@ -54,8 +69,8 @@ async function startGame() {
 
   let multiplier = 1.0;
 
-  // 👉 check DB first
-  const dbCrash = await getCrashFromDB();
+  // 👉 API check
+  const dbCrash = await getCrashFromAPI();
 
   const crashPoint =
     dbCrash !== null
@@ -101,8 +116,8 @@ async function startGame() {
           console.log("❌ SAVE ERROR:", err.message);
         }
 
-        // 🔥 RESET DB (important)
-        await resetCrashDB();
+        // 🔥 RESET API
+        await resetCrashAPI();
 
         io.emit("crash-update", { crashpoint: finalCrash });
         io.emit("reset");
@@ -120,7 +135,6 @@ io.on("connection", (socket) => {
   // 👤 USER
   socket.on("userid", (userId) => {
     socket.userId = userId;
-    console.log("👤 USER:", userId);
   });
 
   // 💰 BET
@@ -129,7 +143,7 @@ io.on("connection", (socket) => {
     if (!fixedAmount || fixedAmount <= 0) return;
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
         new URLSearchParams({
           username,
@@ -138,8 +152,6 @@ io.on("connection", (socket) => {
           amount: fixedAmount,
         })
       );
-
-      console.log("✅ BET:", res.data);
     } catch (err) {
       console.log("❌ BET ERROR:", err.message);
     }
@@ -153,7 +165,7 @@ io.on("connection", (socket) => {
     const fixedAmount = Number(parseFloat(amount).toFixed(2));
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "https://jalwagame5.shop/jet/trova/src/api/bet",
         {
           username,
@@ -168,14 +180,12 @@ io.on("connection", (socket) => {
           },
         }
       );
-
-      console.log("💸 CASHOUT:", res.data);
     } catch (err) {
       console.log("❌ CASHOUT ERROR:", err.message);
     }
   });
 
-  // 🔥 ADMIN CONTROL (DB based)
+  // 🔥 ADMIN CONTROL (API based)
   socket.on("adminCrash", async (data) => {
     if (!data || data.key !== "SECRET123") return;
 
@@ -183,19 +193,11 @@ io.on("connection", (socket) => {
 
     if (!value || value < 1) return;
 
-    try {
-      await db.query(
-        "UPDATE crash_admin_control SET crashpoint = ? WHERE id = 1",
-        [value]
-      );
+    await setCrashAPI(value);
 
-      console.log("🛠 ADMIN SET:", value);
+    console.log("🛠 ADMIN SET:", value);
 
-      socket.emit("adminAck", { status: "ok", value });
-
-    } catch (err) {
-      console.log("❌ ADMIN ERROR:", err.message);
-    }
+    socket.emit("adminAck", { status: "ok", value });
   });
 
   socket.on("disconnect", () => {
