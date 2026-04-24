@@ -51,24 +51,18 @@ function startGame() {
 
         io.emit("crash-update", { crashpoint: finalCrash });
 
-        // 👇 user ko crash dekhne de
-        setTimeout(() => {
-          // ✅ STEP 1: clear multiplier
-          io.emit("crash-update", { crashpoint: null });
+setTimeout(() => {
 
-          // 👇 thoda gap
-          setTimeout(() => {
-            // ✅ STEP 2: reset UI
-            io.emit("reset");
-            io.emit("removecrash");
-          }, 100);
-        }, 1000);
+  // ✅ FORCE RESET TO 1.0 (IMPORTANT)
+  io.emit("crash-update", { crashpoint: 1.0 });
 
+  setTimeout(() => {
+    io.emit("reset");
+    io.emit("removecrash");
+  }, 100);
+
+}, 1000);
         setTimeout(async () => {
-          io.emit("reset");
-          io.emit("removecrash");
-
-          // ✅ HISTORY FIX
           try {
             const res = await axios.get(
               "https://jalwagame5.shop/jet/trova/src/api/bet?action=gethistory",
