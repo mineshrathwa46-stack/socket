@@ -2,6 +2,7 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const axios = require("axios");
+const { userInfo } = require("os");
 
 const app = express();
 const server = http.createServer(app);
@@ -62,57 +63,28 @@ function startGame() {
               {
                 params: {
                   action: "gethistory",
-                  username: username, // 👈 IMPORTANT
+                  username: userId, // ⚠️ yaha dynamic user bhi kar sakta
                 },
                 timeout: 5000,
               },
             );
+
             let history = [];
-            console.log("📊 HISTORY RESPONSE:", res.data);
+
             if (Array.isArray(res.data)) {
-              history = res.data.map((item) => {
-                // ✅ SAFE TIME
-                let time = Date.now();
-                if (item.time && !isNaN(item.time)) {
-                  time = Number(item.time);
-                } else if (item.created_at) {
-                  const t = new Date(item.created_at).getTime();
-                  if (!isNaN(t)) time = t;
-                }
-
-                // ✅ SAFE BET
-                const betRaw = item.bet ?? item.amount ?? 10;
-                const bet = isNaN(Number(betRaw)) ? 10 : Number(betRaw);
-
-                // ✅ SAFE MULT
-                const multRaw = item.mult ?? item.crash ?? 1;
-                let mult = Number(multRaw);
-                if (isNaN(mult) || mult <= 0) mult = 1;
-
-                // ✅ SAFE CASHOUT
-                let cashout = Number(item.cashout);
-                if (isNaN(cashout)) {
-                  cashout = bet * mult;
-                }
-
-                return {
-                  time,
-                  bet,
-                  mult,
-                  cashout,
-                };
-              });
-            } else {
-              history = [
-                {
-                  time: Date.now(),
-                  bet: 10,
-                  mult: finalCrash,
-                  cashout: 0,
-                },
-              ];
+              history = res.data.map((item) => ({
+                time: Number(item.time),
+                bet: Number(item.bet),
+                mult: Number(item.mult),
+                cashout: Number(item.cashout),
+              }));
             }
+
+            // ✅ SEND TO FRONTEND
             io.emit("updatehistory", history);
+
+            console.log("📊 HISTORY SENT:", history);
+
             console.log("📊 HISTORY OK");
           } catch (err) {
             console.log("❌ HISTORY ERROR:", err.message);
@@ -144,27 +116,14 @@ io.on("connection", (socket) => {
   });
 
   // 🔒 USER FIX
-  socket.on("userid", (userId, payload) => {
-    // ✅ FIX 1: agar array aa raha hai → usko clean karo
-    if (Array.isArray(payload)) {
-      payload = null; // history hata diya
-    }
+   socket.on("userid", (userId) => {
 
-    // ✅ FIX 2: agar object hai (history type)
-    if (payload && typeof payload === "object") {
-      payload = null;
-    }
+    if (!userId) return;
 
-    // ✅ FIX 3: userId validate
-    if (!userId || typeof userId !== "string") return;
+    socket.userId = userId; // ✅ store user
 
-    // ✅ FIX 4: ek baar hi set hone do
-    if (!socket.userId) {
-      socket.userId = userId.trim();
-      console.log("👤 USER SET:", socket.userId);
-    }
+    console.log("👤 USER CONNECTED:", userId);
   });
-
   // 💰 BET
   socket.on("newBet", async (username, amount) => {
     if (!amount || amount <= 0) return;
