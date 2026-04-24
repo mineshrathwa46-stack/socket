@@ -29,14 +29,9 @@ function startGame() {
   const crashPoint = Number((Math.random() * 5 + 1).toFixed(2));
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
+ io.emit("reset");
 
-  setTimeout(() => {
-    io.emit("working");
-  }, 10000);
-
-setTimeout(() => {
 io.emit("prepareplane");
-  }, 10000);
 
   
 
@@ -62,7 +57,6 @@ io.emit("prepareplane");
 
   // ✅ FORCE RESET TO 1.0 (IMPORTANT)
   io.emit("crash-update", { crashpoint: 1.0 });
-    io.emit("reset");
     io.emit("removecrash");
   
         setTimeout(async () => {
@@ -119,9 +113,11 @@ io.emit("prepareplane");
             ]);
           }
         }, 600);
+
+        setTimeout(startGame, 10000);
       }
     }, 100);
-  }, 100000);
+  }, 1000);
 }
 
 // 🔌 SOCKET
