@@ -46,6 +46,26 @@ function startGame() {
       io.emit("crash-update", { crashpoint: multiplier });
 
       if (multiplier >= crashPoint) {
+        // 💾 SAVE CRASH RESULT
+try {
+  await axios.post(
+    "https://jalwagame5.shop/jet/trova/src/api/bet",
+    new URLSearchParams({
+      crashpoint: finalCrash,
+      time: new Date().toISOString(),
+    }),
+    {
+      params: {
+        action: "savecrash", // 👈 naya action banayenge PHP me
+      },
+      timeout: 5000,
+    }
+  );
+
+  console.log("💾 SAVED:", finalCrash);
+} catch (err) {
+  console.log("❌ SAVE ERROR:", err.message);
+}
         clearInterval(interval);
 
         const finalCrash = Number(crashPoint.toFixed(2));
