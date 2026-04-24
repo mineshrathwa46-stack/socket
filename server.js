@@ -119,7 +119,7 @@ function startGame() {
 
     }, 100);
 
-  }, 2000);
+  }, 10000);
 }
 
 // 🔌 SOCKET
