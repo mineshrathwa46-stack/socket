@@ -58,6 +58,7 @@ function startGame() {
               "https://jalwagame5.shop/jet/trova/src/api/bet",
               new URLSearchParams({
                 crashpoint: finalCrash,
+                id: currentPeriod,
                 time: new Date().toISOString(),
               }),
               {
@@ -75,32 +76,7 @@ function startGame() {
         io.emit("crash-update", { crashpoint: finalCrash });
         io.emit("reset");
 
-        // 📊 SEND HISTORY PER USER
-        setTimeout(async () => {
-          for (const [id, socket] of io.sockets.sockets) {
 
-            if (!socket.userId) continue;
-
-            try {
-              const res = await axios.get(
-                "https://jalwagame5.shop/jet/trova/src/api/bet",
-                {
-                  params: {
-                    action: "gethistory",
-                    username: socket.userId,
-                  },
-                }
-              );
-
-              let history = Array.isArray(res.data) ? res.data : [];
-
-              socket.emit("updatehistory", history);
-
-            } catch (err) {
-              console.log("❌ HISTORY ERROR:", err.message);
-            }
-          }
-        }, 500);
 
         setTimeout(startGame, 5000);
       }
