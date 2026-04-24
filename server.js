@@ -30,13 +30,10 @@ function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
   io.emit("removecrash");
-  setTimeout(() => {
-    io.emit("working"); // waiting start
-  }, 1000);
-
+    io.emit("working"); // waiting
   setTimeout(() => {
     io.emit("prepareplane");
-  }, 2500);
+  }, 1000);
 
   setTimeout(() => {
     io.emit("flyplane");
@@ -58,8 +55,6 @@ function startGame() {
         // 1️⃣ crash show
         io.emit("crash-update", { crashpoint: finalCrash });
         io.emit("reset");
-         io.emit("removecrash");
-        io.emit("crash-update", { crashpoint: 1.0 });
         setTimeout(async () => {
           try {
             const res = await axios.get(
