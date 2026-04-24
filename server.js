@@ -33,7 +33,6 @@ function startGame() {
 
   io.emit("working");
   io.emit("prepareplane");
-
   setTimeout(() => {
 
     io.emit("flyplane");
@@ -113,7 +112,7 @@ function startGame() {
             }]);
           }
 
-        }, 200);
+        }, 600);
 
         setTimeout(startGame, 3000);
       }
