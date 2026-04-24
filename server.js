@@ -37,8 +37,8 @@ function startGame() {
   setTimeout(() => {
     setTimeout(() => {
     io.emit("flyplane");
-    }, 500);
     io.emit("crash-update", { crashpoint: 1.0 });
+    }, 1000);
 
     let interval = setInterval(() => {
       multiplier = Number((multiplier + 0.01).toFixed(2));
@@ -64,35 +64,51 @@ function startGame() {
             );
 
             let history = [];
+console.log("📊 HISTORY RESPONSE:", res.data);
+           if (Array.isArray(res.data)) {
+  history = res.data.map((item) => {
 
-            if (Array.isArray(res.data)) {
-              history = res.data.map((item) => {
-                const time =
-                  item.time ||
-                  (item.created_at
-                    ? new Date(item.created_at).getTime()
-                    : Date.now());
+    // ✅ SAFE TIME
+    let time = Date.now();
+    if (item.time && !isNaN(item.time)) {
+      time = Number(item.time);
+    } else if (item.created_at) {
+      const t = new Date(item.created_at).getTime();
+      if (!isNaN(t)) time = t;
+    }
 
-                const bet = Number(item.bet || item.amount || 10);
+    // ✅ SAFE BET
+    const betRaw = item.bet ?? item.amount ?? 10;
+    const bet = isNaN(Number(betRaw)) ? 10 : Number(betRaw);
 
-                const multRaw = Number(item.mult || item.crash || 1.0);
-                const mult = multRaw > 0 ? multRaw : 1.0;
+    // ✅ SAFE MULT
+    const multRaw = item.mult ?? item.crash ?? 1;
+    let mult = Number(multRaw);
+    if (isNaN(mult) || mult <= 0) mult = 1;
 
-                const cashout = Number(item.cashout || bet * mult || 0);
+    // ✅ SAFE CASHOUT
+    let cashout = Number(item.cashout);
+    if (isNaN(cashout)) {
+      cashout = bet * mult;
+    }
 
-                return { time, bet, mult, cashout };
-              });
-            } else {
-              // fallback
-              history = [
-                {
-                  time: Date.now(),
-                  bet: 10,
-                  mult: finalCrash,
-                  cashout: 0,
-                },
-              ];
-            }
+    return {
+      time,
+      bet,
+      mult,
+      cashout,
+    };
+  });
+} else {
+  history = [
+    {
+      time: Date.now(),
+      bet: 10,
+      mult: finalCrash,
+      cashout: 0,
+    },
+  ];
+}
             io.emit("updatehistory", history);
             console.log("📊 HISTORY OK");
           } catch (err) {
