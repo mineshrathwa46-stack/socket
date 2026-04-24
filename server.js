@@ -118,30 +118,31 @@ io.on("connection", (socket) => {
   // 💸 CASHOUT
   socket.on("addWin", async (username, amount, multiplier) => {
 
-    if (!amount || amount <= 0) return;
+  if (!amount || amount <= 0) return;
 
-    try {
-      const res = await axios.post(
-        "https://jalwagame5.shop/jet/trova/src/api/bet",
-        {
-          username,
-          amount,
-          multiplier,
+  try {
+    const res = await axios.post(
+      "https://jalwagame5.shop/jet/trova/src/api/bet",
+      {
+        username,
+        amount,
+        multiplier,
+        period: currentPeriod   // 🔥 ADD THIS
+      },
+      {
+        params: {
+          action: "cashout",
+          server: "Crash",
         },
-        {
-          params: {
-            action: "cashout",
-            server: "Crash",
-          },
-        }
-      );
+      }
+    );
 
-      console.log("💸 CASHOUT:", res.data);
+    console.log("💸 CASHOUT:", res.data);
 
-    } catch (err) {
-      console.log("❌ CASHOUT ERROR:", err.message);
-    }
-  });
+  } catch (err) {
+    console.log("❌ CASHOUT ERROR:", err.message);
+  }
+});
 
   socket.on("disconnect", () => {
     console.log("❌ DISCONNECTED:", socket.id);
