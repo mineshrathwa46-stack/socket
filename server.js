@@ -74,8 +74,6 @@ async function startGame() {
   // 🟢 STEP 1: UI prepare
   io.emit("prepareplane");
 
-  // ⏳ WAIT (frontend ko ready hone do)
-  setTimeout(() => {
 
     // 🟢 STEP 2: betting phase
     io.emit("working");
@@ -148,9 +146,6 @@ async function startGame() {
       }
 
       runCrashLoop();
-
-    }, 300); // ⬅️ IMPORTANT DELAY
- // ⬅️ IMPORTANT DELAY
 }
 // 🔌 SOCKET
 io.on("connection", (socket) => {
