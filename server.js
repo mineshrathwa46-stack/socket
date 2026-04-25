@@ -133,7 +133,7 @@ async function startGame() {
             io.emit("removecrash");
 
             // 🔁 NEXT ROUND
-            setTimeout(startGame, 5000);
+            setTimeout(startGame, 4000);
 
           
 
