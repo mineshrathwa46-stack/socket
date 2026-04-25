@@ -34,7 +34,7 @@ async function getCrashFromAPI() {
   }
 }
 function generateCrashPoint() {
-  const houseEdge = 0.05; // 5%
+  const houseEdge = 0.10; // 10%
   let u = Math.random();
 
   // avoid division by zero edge case
