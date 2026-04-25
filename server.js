@@ -61,7 +61,7 @@ async function setCrashAPI(value) {
 async function startGame() {
   currentPeriod = getNextPeriod();
 
-  // ✅ API se crash value lo
+  // ✅ 1. Crash value API se lo
   const dbCrash = await getCrashFromAPI();
 
   const crashPoint =
@@ -71,17 +71,19 @@ async function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
-  // 🟢 STEP 1: prepare
+  // 🟢 STEP 1: UI prepare
   io.emit("prepareplane");
 
+  // ⏳ WAIT (frontend ko ready hone do)
   setTimeout(() => {
 
-    // 🟢 STEP 2: working (betting phase)
+    // 🟢 STEP 2: betting phase
     io.emit("working");
 
+    // ⏳ WAIT (flybol set hone ka time)
     setTimeout(() => {
 
-      // 🟢 STEP 3: flyplane
+      // 🟢 STEP 3: plane fly
       console.log("✈️ flyplane emit");
       io.emit("flyplane");
 
@@ -90,9 +92,9 @@ async function startGame() {
       function runCrashLoop() {
         let elapsed = (Date.now() - startTime) / 1000;
 
+        // 🔥 smooth multiplier
         let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
 
-        // ✅ live multiplier send
         io.emit("crash-update", { crashpoint: multiplier });
 
         if (multiplier >= crashPoint) {
@@ -108,8 +110,8 @@ async function startGame() {
 
         console.log("💥 CRASH:", finalCrash);
 
+        // ✅ SAVE RESULT API
         try {
-          // ✅ SAVE CRASH (IMPORTANT)
           await axios.post(
             "https://jalwagame5.shop/jet/trova/src/api/bet",
             new URLSearchParams({
@@ -123,22 +125,24 @@ async function startGame() {
           console.log("❌ SAVE ERROR:", err.message);
         }
 
+        // ✅ RESET API
         try {
-          // ✅ RESET API (IMPORTANT)
           await resetCrashAPI();
-        } catch (e) {}
+        } catch (err) {
+          console.log("❌ RESET ERROR:", err.message);
+        }
 
-        // ✅ final crash update
+        // 🟢 FINAL CRASH UPDATE
         io.emit("crash-update", { crashpoint: finalCrash });
 
-        // ✅ reset UI
+        // 🟢 RESET UI FLOW
         setTimeout(() => {
           io.emit("reset");
 
           setTimeout(() => {
             io.emit("removecrash");
 
-            // 🟢 next round
+            // 🔁 NEXT ROUND
             setTimeout(startGame, 5000);
 
           }, 1000);
@@ -148,9 +152,9 @@ async function startGame() {
 
       runCrashLoop();
 
-    }, 3000); // ⬅️ fly delay
+    }, 2000); // ⬅️ IMPORTANT DELAY
 
-  }, 3000); // ⬅️ prepare delay
+  }, 2000); // ⬅️ IMPORTANT DELAY
 }
 // 🔌 SOCKET
 io.on("connection", (socket) => {
