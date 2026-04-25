@@ -61,6 +61,7 @@ async function setCrashAPI(value) {
 async function startGame() {
   currentPeriod = getNextPeriod();
 
+  // ✅ API se crash value lo
   const dbCrash = await getCrashFromAPI();
 
   const crashPoint =
@@ -70,18 +71,18 @@ async function startGame() {
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
-  // ✅ STEP 1: prepare
+  // 🟢 STEP 1: prepare
   io.emit("prepareplane");
 
-  // ✅ STEP 2: delay for UI ready
   setTimeout(() => {
 
-    // ✅ STEP 3: working (betting phase)
+    // 🟢 STEP 2: working (betting phase)
     io.emit("working");
 
-    // ✅ STEP 4: delay BEFORE flyplane (IMPORTANT)
     setTimeout(() => {
 
+      // 🟢 STEP 3: flyplane
+      console.log("✈️ flyplane emit");
       io.emit("flyplane");
 
       let startTime = Date.now();
@@ -91,6 +92,7 @@ async function startGame() {
 
         let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
 
+        // ✅ live multiplier send
         io.emit("crash-update", { crashpoint: multiplier });
 
         if (multiplier >= crashPoint) {
@@ -107,6 +109,7 @@ async function startGame() {
         console.log("💥 CRASH:", finalCrash);
 
         try {
+          // ✅ SAVE CRASH (IMPORTANT)
           await axios.post(
             "https://jalwagame5.shop/jet/trova/src/api/bet",
             new URLSearchParams({
@@ -120,19 +123,23 @@ async function startGame() {
           console.log("❌ SAVE ERROR:", err.message);
         }
 
-        await resetCrashAPI();
+        try {
+          // ✅ RESET API (IMPORTANT)
+          await resetCrashAPI();
+        } catch (e) {}
 
-        // ✅ FINAL EVENTS ORDER (VERY IMPORTANT)
+        // ✅ final crash update
         io.emit("crash-update", { crashpoint: finalCrash });
 
+        // ✅ reset UI
         setTimeout(() => {
           io.emit("reset");
 
           setTimeout(() => {
             io.emit("removecrash");
 
-            // ✅ next round
-            setTimeout(startGame, 4000);
+            // 🟢 next round
+            setTimeout(startGame, 5000);
 
           }, 1000);
 
@@ -141,9 +148,9 @@ async function startGame() {
 
       runCrashLoop();
 
-    }, 2000); // ⬅️ IMPORTANT delay before fly
+    }, 3000); // ⬅️ fly delay
 
-  }, 2000); // ⬅️ UI prepare delay
+  }, 3000); // ⬅️ prepare delay
 }
 // 🔌 SOCKET
 io.on("connection", (socket) => {
