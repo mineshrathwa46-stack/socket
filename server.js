@@ -154,7 +154,7 @@ async function startGame() {
 
     }, 2000); // ⬅️ IMPORTANT DELAY
 
-  }, 2000); // ⬅️ IMPORTANT DELAY
+  }, 4000); // ⬅️ IMPORTANT DELAY
 }
 // 🔌 SOCKET
 io.on("connection", (socket) => {
