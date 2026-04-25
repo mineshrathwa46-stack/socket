@@ -126,11 +126,6 @@ async function startGame() {
         } catch (err) {
           console.log("❌ RESET ERROR:", err.message);
         }
-
-        // 🟢 FINAL CRASH UPDATE
-        io.emit("crash-update",finalCrash);
-
-        // 🟢 RESET UI FLOW
        
           io.emit("reset");
 
