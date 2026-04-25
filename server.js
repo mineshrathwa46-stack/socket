@@ -95,7 +95,7 @@ async function startGame() {
         // 🔥 smooth multiplier
         let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
 
-        io.emit("crash-update", { crashpoint: multiplier });
+        io.emit("crash-update",multiplier);
 
         if (multiplier >= crashPoint) {
           finishGame();
@@ -133,7 +133,7 @@ async function startGame() {
         }
 
         // 🟢 FINAL CRASH UPDATE
-        io.emit("crash-update", { crashpoint: finalCrash });
+        io.emit("crash-update",finalCrash);
 
         // 🟢 RESET UI FLOW
         setTimeout(() => {
