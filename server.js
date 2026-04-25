@@ -80,9 +80,6 @@ async function startGame() {
     // 🟢 STEP 2: betting phase
     io.emit("working");
 
-    // ⏳ WAIT (flybol set hone ka time)
-    setTimeout(() => {
-
       // 🟢 STEP 3: plane fly
       console.log("✈️ flyplane emit");
       io.emit("flyplane");
@@ -153,8 +150,7 @@ async function startGame() {
       runCrashLoop();
 
     }, 2000); // ⬅️ IMPORTANT DELAY
-
-  }, 1000); // ⬅️ IMPORTANT DELAY
+ // ⬅️ IMPORTANT DELAY
 }
 // 🔌 SOCKET
 io.on("connection", (socket) => {
