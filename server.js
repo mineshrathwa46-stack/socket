@@ -69,76 +69,82 @@ async function startGame() {
       : Number((Math.random() * 5 + 1).toFixed(2));
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
+
+  // ✅ STEP 1: prepare
   io.emit("prepareplane");
-  
-  setTimeout(() => {
-    
-},5000);
-  io.emit("working");
 
+  // ✅ STEP 2: delay for UI ready
   setTimeout(() => {
-    
-},5000);
-  setTimeout(() => {
-    io.emit("flyplane");
+
+    // ✅ STEP 3: working (betting phase)
+    io.emit("working");
+
+    // ✅ STEP 4: delay BEFORE flyplane (IMPORTANT)
     setTimeout(() => {
-    }, 1000);
-    let startTime = Date.now();
 
-    function runCrashLoop() {
-      let elapsed = (Date.now() - startTime) / 1000;
+      io.emit("flyplane");
 
-      // 🔥 SAME SPEED FOR ALL ROUNDS
-      let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
+      let startTime = Date.now();
 
-      io.emit("crash-update", { crashpoint: multiplier });
+      function runCrashLoop() {
+        let elapsed = (Date.now() - startTime) / 1000;
 
-      if (multiplier >= crashPoint) {
-        finishGame();
-        return;
+        let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
+
+        io.emit("crash-update", { crashpoint: multiplier });
+
+        if (multiplier >= crashPoint) {
+          finishGame();
+          return;
+        }
+
+        setTimeout(runCrashLoop, 100);
       }
 
-      setTimeout(runCrashLoop, 100);
-    }
+      async function finishGame() {
+        const finalCrash = Number(crashPoint.toFixed(2));
 
-    async function finishGame() {
-      const finalCrash = Number(crashPoint.toFixed(2));
+        console.log("💥 CRASH:", finalCrash);
 
-      console.log("💥 CRASH:", finalCrash);
+        try {
+          await axios.post(
+            "https://jalwagame5.shop/jet/trova/src/api/bet",
+            new URLSearchParams({
+              crashpoint: finalCrash,
+              id: currentPeriod,
+              time: new Date().toISOString(),
+            }),
+            { params: { action: "savecrash" } }
+          );
+        } catch (err) {
+          console.log("❌ SAVE ERROR:", err.message);
+        }
 
-      try {
-        await axios.post(
-          "https://jalwagame5.shop/jet/trova/src/api/bet",
-          new URLSearchParams({
-            crashpoint: finalCrash,
-            id: currentPeriod,
-            time: new Date().toISOString(),
-          }),
-          { params: { action: "savecrash" } }
-        );
-      } catch (err) {
-        console.log("❌ SAVE ERROR:", err.message);
+        await resetCrashAPI();
+
+        // ✅ FINAL EVENTS ORDER (VERY IMPORTANT)
+        io.emit("crash-update", { crashpoint: finalCrash });
+
+        setTimeout(() => {
+          io.emit("reset");
+
+          setTimeout(() => {
+            io.emit("removecrash");
+
+            // ✅ next round
+            setTimeout(startGame, 4000);
+
+          }, 1000);
+
+        }, 500);
       }
 
-      await resetCrashAPI();
+      runCrashLoop();
 
-      io.emit("crash-update", { crashpoint: finalCrash });
-       io.emit("reset");
-setTimeout(() => {
-     
-},1000);
- io.emit("removecrash");
-setTimeout(() => {
-},);
+    }, 2000); // ⬅️ IMPORTANT delay before fly
 
-     
-      setTimeout(startGame, 6000);
-    }
-
-    runCrashLoop();
-  }, 1000);
+  }, 2000); // ⬅️ UI prepare delay
 }
-
 // 🔌 SOCKET
 io.on("connection", (socket) => {
   console.log("✅ CONNECTED:", socket.id);
