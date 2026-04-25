@@ -149,7 +149,7 @@ async function startGame() {
 
       runCrashLoop();
 
-    }, 2000); // ⬅️ IMPORTANT DELAY
+    }, 300); // ⬅️ IMPORTANT DELAY
  // ⬅️ IMPORTANT DELAY
 }
 // 🔌 SOCKET
