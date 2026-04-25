@@ -73,8 +73,12 @@ async function startGame() {
   
   setTimeout(() => {
     
-},1000);
+},5000);
   io.emit("working");
+
+  setTimeout(() => {
+    
+},5000);
   setTimeout(() => {
     io.emit("flyplane");
     setTimeout(() => {
