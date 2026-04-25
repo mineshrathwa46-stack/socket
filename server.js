@@ -34,16 +34,15 @@ async function getCrashFromAPI() {
   }
 }
 function generateCrashPoint() {
-  const houseEdge = 0.10; // 10%
+  const houseEdge = 0.10;
   let u = Math.random();
 
-  // avoid division by zero edge case
-  if (u === 1) u = 0.999999;
+  if (u <= 0) u = 0.000001;
+  if (u >= 1) u = 0.999999;
 
   let crash = (1 - houseEdge) / (1 - u);
 
-  // optional: max cap (UI stable rakhne ke liye)
-  if (crash > 1000) crash = 1000;
+  crash = Math.max(1, Math.min(crash, 1000));
 
   return Number(crash.toFixed(2));
 }
