@@ -118,7 +118,7 @@ setTimeout(() => {
       io.emit("reset");
 },2000);
      io.emit("removecrash"); 
-   setTimeout(startGame, 2000);
+   setTimeout(startGame, 10000);
     }
 
     runCrashLoop();
