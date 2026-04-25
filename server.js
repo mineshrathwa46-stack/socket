@@ -33,7 +33,20 @@ async function getCrashFromAPI() {
     return null;
   }
 }
+function generateCrashPoint() {
+  const houseEdge = 0.05; // 5%
+  let u = Math.random();
 
+  // avoid division by zero edge case
+  if (u === 1) u = 0.999999;
+
+  let crash = (1 - houseEdge) / (1 - u);
+
+  // optional: max cap (UI stable rakhne ke liye)
+  if (crash > 1000) crash = 1000;
+
+  return Number(crash.toFixed(2));
+}
 async function resetCrashAPI() {
   try {
     await axios.get(API, {
@@ -65,10 +78,10 @@ async function startGame() {
   // ✅ 1. Crash value API se lo
   const dbCrash = await getCrashFromAPI();
 
-  const crashPoint =
-    dbCrash !== null
-      ? Number(parseFloat(dbCrash).toFixed(2))
-      : Number((Math.random() * 5 + 1).toFixed(2));
+ const crashPoint =
+  dbCrash !== null
+    ? Number(parseFloat(dbCrash).toFixed(2))
+    : generateCrashPoint();
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
 
