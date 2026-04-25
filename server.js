@@ -128,7 +128,7 @@ async function startGame() {
         }
        
           io.emit("reset");
-
+            setTimeout(() =>{}, 2000);
          
             io.emit("removecrash");
 
