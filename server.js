@@ -14,7 +14,8 @@ const io = new Server(server, {
 });
 
 let currentPeriod;
-
+let isFlying = false;
+let activeBets = {};
 const API = "https://jalwagame5.shop/jet/trova/src/api/api_crash.php";
 
 function getNextPeriod() {
@@ -81,7 +82,7 @@ async function startGame() {
       // 🟢 STEP 3: plane fly
       console.log("✈️ flyplane emit");
       io.emit("flyplane");
-
+isFlying = true;
       let startTime = Date.now();
 
       function runCrashLoop() {
@@ -89,6 +90,7 @@ async function startGame() {
 
         // 🔥 smooth multiplier
         let multiplier = Number((Math.exp(0.15 * elapsed)).toFixed(2));
+        
 
         io.emit("crash-update",multiplier);
 
@@ -101,6 +103,28 @@ async function startGame() {
       }
 
       async function finishGame() {
+        isFlying = false;
+for (let user in activeBets) {
+
+  if (!activeBets[user].cashedOut) {
+
+    console.log("❌ AUTO LOSE:", user);
+
+    try {
+      await axios.post(
+        "https://jalwagame5.shop/jet/trova/src/api/bet?action=cashout&server=Crash",
+        {
+          username: user,
+          amount: 0,        // ❌ loss
+          multiplier: 0,    // ❌ no win
+          period: currentPeriod
+        }
+      );
+    } catch (err) {
+      console.log("❌ AUTO LOSS ERROR:", err.message);
+    }
+  }
+}
         const finalCrash = Number(crashPoint.toFixed(2));
 
         console.log("💥 CRASH:", finalCrash);
@@ -130,13 +154,13 @@ async function startGame() {
           io.emit("reset");
             setTimeout(() =>{}, 2000);
          
-            
+            io.emit("removecrash");
 
             // 🔁 NEXT ROUND
             setTimeout(startGame, 4000);
 
           
-
+activeBets = {};
        
       }
 
@@ -153,7 +177,13 @@ io.on("connection", (socket) => {
   socket.on("newBet", async (username, amount) => {
     const fixedAmount = Number(parseFloat(amount).toFixed(2));
     if (!fixedAmount || fixedAmount <= 0) return;
+ // 🔥 yaha add karo
+  activeBets[username] = {
+    amount: fixedAmount,
+    cashedOut: false
+  };
 
+  console.log("🟢 Bet added:", username, activeBets[username]);
     try {
       await axios.post(
         "https://jalwagame5.shop/jet/trova/src/api/bet?action=bet&server=Crash",
@@ -170,8 +200,11 @@ io.on("connection", (socket) => {
   });
 
   socket.on("addWin", async (username, amount, multiplier) => {
-    if (!amount || amount <= 0) return;
-
+    if (!isFlying) return;           // game crash ho chuka
+if (!amount || amount <= 0) return;  // invalid amount
+if (activeBets[username]) {
+    activeBets[username].cashedOut = true;
+  }
     const fixedMultiplier = Number(multiplier.toFixed(2));
     const fixedAmount = Number(parseFloat(amount).toFixed(2));
 
