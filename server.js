@@ -130,7 +130,7 @@ async function startGame() {
           io.emit("reset");
             setTimeout(() =>{}, 2000);
          
-            io.emit("removecrash");
+            
 
             // 🔁 NEXT ROUND
             setTimeout(startGame, 4000);
