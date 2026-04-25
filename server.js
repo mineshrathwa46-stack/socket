@@ -69,12 +69,7 @@ async function startGame() {
       : Number((Math.random() * 5 + 1).toFixed(2));
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
-  setTimeout(() => {
-     io.emit("working");
-},2000);
-setTimeout(() => {
   io.emit("prepareplane");
-},2000);
   setTimeout(() => {
     io.emit("flyplane");
     setTimeout(() => {
@@ -122,12 +117,8 @@ setTimeout(() => {
 setTimeout(() => {
       io.emit("reset");
 },2000);
-setTimeout(() => {
-     io.emit("removecrash");
-},3000);
-
-     
-      setTimeout(startGame, 2000);
+     io.emit("removecrash"); 
+   setTimeout(startGame, 2000);
     }
 
     runCrashLoop();
