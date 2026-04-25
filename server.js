@@ -136,25 +136,25 @@ async function startGame() {
         io.emit("crash-update",finalCrash);
 
         // 🟢 RESET UI FLOW
-        setTimeout(() => {
+       
           io.emit("reset");
 
-          setTimeout(() => {
+         
             io.emit("removecrash");
 
             // 🔁 NEXT ROUND
             setTimeout(startGame, 5000);
 
-          }, 1000);
+          
 
-        }, 500);
+       
       }
 
       runCrashLoop();
 
     }, 2000); // ⬅️ IMPORTANT DELAY
 
-  }, 4000); // ⬅️ IMPORTANT DELAY
+  }, 1000); // ⬅️ IMPORTANT DELAY
 }
 // 🔌 SOCKET
 io.on("connection", (socket) => {
