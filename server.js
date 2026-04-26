@@ -87,10 +87,11 @@ async function startGame() {
   // 🟢 STEP 1: UI prepare
   io.emit("prepareplane");
 
-}, 2000);
+}, 3000);
+setTimeout(() => {
     // 🟢 STEP 2: betting phase
     io.emit("working");
-
+}, 3000);
       // 🟢 STEP 3: plane fly
       console.log("✈️ flyplane emit");
       io.emit("flyplane");
