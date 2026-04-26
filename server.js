@@ -162,7 +162,7 @@ for (let user in activeBets) {
         } catch (err) {
           console.log("❌ RESET ERROR:", err.message);
         }
-       
+       setTimeout(() => {},5000);
           io.emit("reset");
             setTimeout(() =>{}, 2000);
          
