@@ -138,7 +138,7 @@ for (let user in activeBets) {
   }
 }
         const finalCrash = Number(crashPoint.toFixed(2));
-
+io.emit("updatehistory", finalCrash);
         console.log("💥 CRASH:", finalCrash);
 
         // ✅ SAVE RESULT API
@@ -162,12 +162,13 @@ for (let user in activeBets) {
         } catch (err) {
           console.log("❌ RESET ERROR:", err.message);
         }
+        
          io.emit("reset");
             setTimeout(() =>{}, 2000);
           
          
             io.emit("removecrash");
-          io.emit("updatehistory", finalCrash);
+          
             // 🔁 NEXT ROUND
             setTimeout(startGame, 6000);
 
