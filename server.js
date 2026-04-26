@@ -141,7 +141,7 @@ for (let user in activeBets) {
 io.emit("updatehistory", finalCrash);
   io.emit("reset");
         console.log("💥 CRASH:", finalCrash);
-        setTimeout(() =>{}, 1000);
+        setTimeout(() =>{}, 2000);
 
         // ✅ SAVE RESULT API
         try {
