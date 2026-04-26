@@ -138,10 +138,10 @@ for (let user in activeBets) {
   }
 }
         const finalCrash = Number(crashPoint.toFixed(2));
-      setTimeout(() => {  io.emit("crash-update",finalCrash);
+        io.emit("crash-update",finalCrash);
 io.emit("updatehistory", finalCrash);
   io.emit("reset");
-      }, 5000);
+    setTimeout(() => { }, 5000);
         console.log("💥 CRASH:", finalCrash);
         setTimeout(() =>{}, 2000);
 
