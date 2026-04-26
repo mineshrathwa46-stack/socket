@@ -172,7 +172,7 @@ io.emit("updatehistory", finalCrash);
             io.emit("removecrash");
           
             // 🔁 NEXT ROUND
-            setTimeout(startGame, 6000);
+            setTimeout(startGame, 4000);
 
           
 activeBets = {};
