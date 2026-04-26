@@ -83,15 +83,14 @@ async function startGame() {
     : generateCrashPoint();
 
   console.log("🚀 ROUND:", currentPeriod, "CRASH:", crashPoint);
- setTimeout(() => {
   // 🟢 STEP 1: UI prepare
   io.emit("prepareplane");
 
-}, 3000);
+
 setTimeout(() => {
     // 🟢 STEP 2: betting phase
     io.emit("working");
-}, 3000);
+}, 1000);
       // 🟢 STEP 3: plane fly
       console.log("✈️ flyplane emit");
       io.emit("flyplane");
