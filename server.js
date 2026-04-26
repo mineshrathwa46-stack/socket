@@ -162,11 +162,11 @@ for (let user in activeBets) {
         } catch (err) {
           console.log("❌ RESET ERROR:", err.message);
         }
-         io.emit("reset");
+  
+          io.emit("removecrash");
             setTimeout(() =>{}, 2000);
-          
-         
-            io.emit("removecrash");
+                 io.emit("reset");
+           
 
             // 🔁 NEXT ROUND
             setTimeout(startGame, 6000);
